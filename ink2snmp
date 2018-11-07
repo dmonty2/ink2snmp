@@ -1,0 +1,161 @@
+#!/bin/bash
+# Desc: reads output from ink command and parses it into snmp format.
+# Auth: Dean Montgomery
+# Date: Nov 6, 2018
+
+# First install libinklevel and ink commands  man ink
+# http://ink.sourceforge.net/
+
+shopt -s extglob
+F=$( tmpfile )
+# **** test and setup your 'ink' command here:
+ink -b bjnp://canon.dj-monty.net > $F
+
+MODEL=`cat $F head -n 3 | tail -n 1`
+K=`grep Black $F | awk '{print $2}' | tr -d '%'`
+PK=`grep Photoblack $F | awk '{print $2}' | tr -d '%'`
+C=`grep Cyan $F | awk '{print $2}' | tr -d '%'`
+Y=`grep Yellow $F | awk '{print $2}' | tr -d '%'`
+M=`grep Magenta $F | awk '{print $2}' | tr -d '%'`
+
+PLACE=".1.3.6.1.2.1.43"
+REQ=$2
+
+#echo " $1 $2 " >> /tmp/log.ink
+#if [ "$1" = "-s" ]; then
+#  echo $* >> /tmp/passtest.log
+#  exit 0
+#fi
+
+# TODO: https://github.com/winlibs/net-snmp/blob/master/local/passtest
+# this is for snmpwalk.
+if [ "$1" = "-n" ]; then
+  case "$REQ" in
+    $PLACE|			\
+    $PLACE.[0-9]|		\
+    $PLACE.[0-9].*|		\
+    $PLACE.10|			\
+    $PLACE.10.[0-2]|		\
+    $PLACE.10.2.[0-1]|		\
+    $PLACE.10.2.1.[0-4]|	\
+    $PLACE.10.2.1.4.[0-1]|	\
+    $PLACE.10.2.1.4.1.0)	RET=$PLACE.10.2.1.4.1.1 ;;
+    $PLACE.10.2.1.4.1.1)	RET=$PLACE.11.1.1.3.1.1 ;;
+
+    $PLACE.11|			\
+    $PLACE.11.[0-1]|		\
+    $PLACE.11.1.[0-1]|		\
+    $PLACE.11.1.1.[0-3]|        \
+    $PLACE.11.1.1.3.[0-1]|	\
+    $PLACE.11.1.1.3.1.0)	RET=$PLACE.11.1.1.3.1.1 ;;
+    $PLACE.11.1.1.3.1.1)	RET=$PLACE.11.1.1.3.1.2 ;;
+    $PLACE.11.1.1.3.1.2)	RET=$PLACE.11.1.1.3.1.3 ;;
+    $PLACE.11.1.1.3.1.3)	RET=$PLACE.11.1.1.3.1.4 ;;
+    $PLACE.11.1.1.3.1.4)	RET=$PLACE.11.1.1.3.1.5 ;;
+    $PLACE.11.1.1.3.1.5)	RET=$PLACE.11.1.1.5.1.1 ;;
+
+    $PLACE.11.1.1.[45]|		\
+    $PLACE.11.1.1.5.[0-1]|	\
+    $PLACE.11.1.1.5.1.0)	RET=$PLACE.11.1.1.5.1.1 ;;
+    $PLACE.11.1.1.5.1.1)	RET=$PLACE.11.1.1.5.1.2 ;;
+    $PLACE.11.1.1.5.1.2)	RET=$PLACE.11.1.1.5.1.3 ;;
+    $PLACE.11.1.1.5.1.3)	RET=$PLACE.11.1.1.5.1.4 ;;
+    $PLACE.11.1.1.5.1.4)	RET=$PLACE.11.1.1.5.1.5 ;;
+    $PLACE.11.1.1.5.1.5)	RET=$PLACE.11.1.1.6.1.1 ;;
+
+    $PLACE.11.1.1.[6]|		\
+    $PLACE.11.1.1.6.[0-1]|	\
+    $PLACE.11.1.1.6.1.0)	RET=$PLACE.11.1.1.6.1.1 ;;
+    $PLACE.11.1.1.6.1.1)	RET=$PLACE.11.1.1.6.1.2 ;;
+    $PLACE.11.1.1.6.1.2)	RET=$PLACE.11.1.1.6.1.3 ;;
+    $PLACE.11.1.1.6.1.3)	RET=$PLACE.11.1.1.6.1.4 ;;
+    $PLACE.11.1.1.6.1.4)	RET=$PLACE.11.1.1.6.1.5 ;;
+    $PLACE.11.1.1.6.1.5)	RET=$PLACE.11.1.1.8.1.1 ;;
+
+
+    $PLACE.11.1.1.[78]|		\
+    $PLACE.11.1.1.8.[0-1]|	\
+    $PLACE.11.1.1.8.1.0)	RET=$PLACE.11.1.1.8.1.1 ;;
+    $PLACE.11.1.1.8.1.1)	RET=$PLACE.11.1.1.8.1.2 ;;
+    $PLACE.11.1.1.8.1.2)	RET=$PLACE.11.1.1.8.1.3 ;;
+    $PLACE.11.1.1.8.1.3)	RET=$PLACE.11.1.1.8.1.4 ;;
+    $PLACE.11.1.1.8.1.4)	RET=$PLACE.11.1.1.8.1.5 ;;
+    $PLACE.11.1.1.8.1.5)	RET=$PLACE.11.1.1.9.1.1 ;;
+
+    $PLACE.11.1.1.9|		\
+    $PLACE.11.1.1.9.[0-1]|	\
+    $PLACE.11.1.1.9.1.0)	RET=$PLACE.11.1.1.9.1.1 ;;
+    $PLACE.11.1.1.9.1.1)	RET=$PLACE.11.1.1.9.1.2 ;;
+    $PLACE.11.1.1.9.1.2)	RET=$PLACE.11.1.1.9.1.3 ;;
+    $PLACE.11.1.1.9.1.3)	RET=$PLACE.11.1.1.9.1.4 ;;
+    $PLACE.11.1.1.9.1.4)	RET=$PLACE.11.1.1.9.1.5 ;;
+
+    *)				exit 0 ;;
+  esac
+else
+#
+#  GET requests - check for valid instance
+#
+  case "$REQ" in
+    $PLACE.10.2.1.4.1.1|	\
+    $PLACE.11.1.1.3.1.[1-5]|	\
+    $PLACE.11.1.1.5.1.[1-5]|	\
+    $PLACE.11.1.1.6.1.[1-5]|	\
+    $PLACE.11.1.1.8.1.[1-5]|	\
+    $PLACE.11.1.1.9.1.[1-5])	RET=$REQ ;;
+
+    *)				exit 0 ;;
+  esac
+fi
+
+echo $RET;
+
+# if this is running on a cups server you may be able to get a page sum for the log period but this is not accurate
+if [ "$RET" = ".1.3.6.1.2.1.43.10.2.1.4.1.1" ]; then
+  echo Counter32
+  #By queue name
+  #grep ^colour /var/log/cups/page_log | awk '{SUM+=$7} END {print int(SUM)}'
+
+  #All queues or if there is just one queue
+  cat /var/log/cups/page_log | awk '{SUM+=$7} END {print int(SUM)}'
+
+  #TODO: some printers may report the number of pages printed?
+fi
+
+# Printer-MIB::prtMarkerSuppliesColorantIndex.1.1 = INTEGER: 1
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.3.1.1" ]; then echo integer; echo 1; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.3.1.2" ]; then echo integer; echo 2; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.3.1.3" ]; then echo integer; echo 3; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.3.1.4" ]; then echo integer; echo 4; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.3.1.5" ]; then echo integer; echo 5; fi
+
+# Printer-MIB::prtMarkerSuppliesType.1.1 = INTEGER: toner(3)
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.5.1.1" ]; then echo integer; echo 3; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.5.1.2" ]; then echo integer; echo 3; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.5.1.3" ]; then echo integer; echo 3; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.5.1.4" ]; then echo integer; echo 3; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.5.1.5" ]; then echo integer; echo 3; fi
+
+# Printer-MIB::prtMarkerSuppliesDescription.1.1 = STRING: "Black Toner"
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.6.1.1" ]; then echo string; echo Black; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.6.1.2" ]; then echo string; echo Photoblack; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.6.1.3" ]; then echo string; echo Cyan; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.6.1.4" ]; then echo string; echo Magenta; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.6.1.5" ]; then echo string; echo Yellow; fi
+
+# Printer-MIB::prtMarkerSuppliesLevel.1.1 = INTEGER: 80
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.9.1.1" ]; then echo integer; echo $K; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.9.1.2" ]; then echo integer; echo $PK; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.9.1.3" ]; then echo integer; echo $C; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.9.1.4" ]; then echo integer; echo $Y; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.9.1.5" ]; then echo integer; echo $M; fi
+
+# Printer-MIB::prtMarkerSuppliesMaxCapacity.1.1 = INTEGER: 100
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.8.1.1" ]; then echo integer; echo 100; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.8.1.2" ]; then echo integer; echo 100; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.8.1.3" ]; then echo integer; echo 100; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.8.1.4" ]; then echo integer; echo 100; fi
+if [ "$RET" = ".1.3.6.1.2.1.43.11.1.1.8.1.5" ]; then echo integer; echo 100; fi
+
+rm -f $F
+exit 0
